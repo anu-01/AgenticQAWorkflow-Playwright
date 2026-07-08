@@ -108,7 +108,7 @@ Using insights from the manual exploratory testing:
 - Apply wait strategies and UI behaviors observed during manual testing
 - Incorporate any workarounds for UI quirks discovered
 
-Generate Playwright JavaScript automation scripts:
+Generate Playwright Typescript automation scripts:
 1. Create scripts for each test scenario from the test plan
 2. Organize scripts into appropriate test suite files in tests/saucedemo-checkout/
 3. Use the test case names and steps from the test plan
