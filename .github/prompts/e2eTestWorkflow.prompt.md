@@ -81,6 +81,7 @@ Then execute the test scenarios defined in that plan:
    - Any UI inconsistencies or unexpected behaviors
    - Missing validations or bugs discovered
    - Screenshots as evidence
+   - Any additional notes or observations
 ```
 
 **Expected Output:**
