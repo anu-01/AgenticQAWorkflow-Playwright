@@ -1,156 +1,173 @@
-# Test Execution Report — SCRUM-101 E-commerce Checkout
+# SCRUM-101 Checkout Test Report
 
-**Story:** SCRUM-101 — As a customer, I want to complete my purchase through a checkout process so that I can order products online.
-**Application Under Test:** https://www.saucedemo.com
+**Application:** https://www.saucedemo.com (Swag Labs)
+**Feature:** E-commerce Checkout Process
 **Test Credentials:** standard_user / secret_sauce
-**Browsers:** Chromium, Firefox, WebKit (configured); Chromium executed for this report
-**Framework:** Playwright @ TypeScript
-**Date:** 2026-05-19
+**Report Date:** 2026-09-29
 
 ---
 
 ## 1. Executive Summary
 
-| Metric | Value |
+| Metric | Count |
 |---|---|
-| Total test cases planned | 32 |
-| Manual exploratory cases executed | 4 (representative spot checks) |
-| Automated test cases generated | 32 |
-| Automated initial result (chromium) | 31 passed / 1 failed |
-| Healing actions performed | 1 |
-| Automated final result (chromium) | **32 passed / 0 failed** |
-| Acceptance criteria covered | 5 / 5 (AC1–AC5) |
-| Overall status | **✅ PASS** |
+| Total test scenarios planned | 18 |
+| Manual (exploratory) test cases executed | 18 |
+| Automated test cases created | 18 |
+| Automated test executions (3 browsers × 18 tests) | 54 |
+| Automated tests passed | 54 / 54 (100%) |
+| Automated tests failed | 0 |
+| Automated tests requiring healing | 0 |
+| Defects logged | 2 |
+| Behavioral observations (non-defect) | 1 |
 
-All five acceptance criteria from SCRUM-101 are fully covered by automation. After one round of self-healing the entire suite is green on Chromium and ready for the configured Firefox / WebKit projects.
-
----
-
-## 2. Manual Exploratory Test Results (Step 3)
-
-Manual exploration was used to (a) validate the live application state, (b) confirm the `data-test` selector catalogue, and (c) feed accurate test data into automation.
-
-| Scenario | Result | Evidence |
-|---|---|---|
-| Login → inventory page | ✅ Pass — 6 product cards rendered | — |
-| Add 2 items → cart page | ✅ Pass — badge increments to `2`; both line items visible with $29.99 and $9.99 | [03-cart.png](screenshots/03-cart.png) |
-| Submit empty checkout-info form | ✅ Pass — "Error: First Name is required" displayed | [04-error-first-name.png](screenshots/04-error-first-name.png) |
-| Order overview totals | ✅ Pass — Item total $39.98, Tax $3.20, Total $43.18; Payment "SauceCard #31337"; Shipping "Free Pony Express Delivery!" | [05-overview.png](screenshots/05-overview.png) |
-| Order completion | ✅ Pass — "Thank you for your order!"; cart badge cleared | [06-complete.png](screenshots/06-complete.png) |
-
-### Observations & insights fed into automation
-
-1. All form controls expose stable `data-test="..."` attributes — these are preferred over CSS / text selectors.
-2. The Continue button is an `<input type="submit">` inside a `<form>`; click followed by `expect(page).toHaveURL(...)` is the most reliable navigation pattern.
-3. Validation is sequential — only the first missing field is reported per submission (First Name → Last Name → Postal Code).
-4. Cancel destinations differ by page:
-   - `/checkout-step-one.html` Cancel → `/cart.html`
-   - `/checkout-step-two.html` Cancel → `/inventory.html` (NOT cart)
-5. After order completion, the cart is cleared — `[data-test="shopping-cart-badge"]` is absent on `/inventory.html`.
-6. The per-field error indicator is an `<svg class="error_icon">` element, **not** an `<img>` tag. (See defect log DEF-001.)
-
-No functional bugs were found during exploration.
+**Overall Status: ✅ PASS**, with 2 defects logged against the acceptance criteria / business rules (see [Section 4](#4-defects-log)). All core happy-path and validation flows for the checkout process work as expected across Chromium, Firefox, and WebKit.
 
 ---
 
-## 3. Automated Test Results (Steps 4–5)
+## 2. Manual Test Results
 
-### 3.1 Initial run (Step 4)
+Full details: [exploratory-testing-results.md](exploratory-testing-results.md)
 
-```
-Running 32 tests using 10 workers
-...
-31 passed, 1 failed (33.0s)
-```
+Manual exploratory testing was performed directly against the live application using Playwright MCP browser tools, executing all 18 scenarios from the [test plan](../specs/saucedemo-checkout-test-plan.md).
 
-| Suite | Pass | Fail |
-|---|---:|---:|
-| AC1 — Cart Review (5) | 5 | 0 |
-| AC2 — Checkout Information Entry (7) | 7 | 0 |
-| AC3 — Order Overview (5) | 5 | 0 |
-| AC4 — Order Completion (4) | 4 | 0 |
-| AC5 — Error Handling (4) | 3 | 1 |
-| Happy Path E2E (2) | 2 | 0 |
-| Navigation & Edge Cases (5) | 5 | 0 |
-| **TOTAL** | **31** | **1** |
-
-**Failure:** `TC-24 Input fields receive error styling when validation fails` — `locator('img')` timed out inside `.form_group`.
-
-### 3.2 Healing activities (Step 5)
-
-| # | Test | Root cause | Fix | Result |
+| Suite | Scenarios | Passed | Observations | Defects |
 |---|---|---|---|---|
-| 1 | `tests/error-handling/tc-24-error-field-styling.spec.ts` | The error icon is an `<svg class="error_icon" role="img">`, not an `<img>` tag. `locator('img')` matches HTML tag, not the ARIA role. | Replaced `locator('img')` → `locator('.error_icon')` on all three form-group assertions. | ✅ Pass (4.5s) |
+| Cart Review | 3 | 3 | 0 | 0 |
+| Checkout Information Entry | 6 | 6 | 0 | 0 |
+| Order Overview | 3 | 2 | 1 | 0 |
+| Order Completion | 3 | 3 | 0 | 0 |
+| Navigation and Edge Cases | 3 | 1 | 0 | 2 |
+| **Total** | **18** | **15** | **1** | **2** |
 
-### 3.3 Final run (Step 5 verification)
+Screenshots captured as evidence:
+- [cart-review.png](screenshots/cart-review.png) — cart with two items and calculated totals
+- [checkout-validation-error.png](screenshots/checkout-validation-error.png) — required-field validation error
+- [checkout-overview.png](screenshots/checkout-overview.png) — order overview with payment/shipping/pricing
+- [order-confirmation.png](screenshots/order-confirmation.png) — order confirmation page
 
-```
-Running 32 tests using 10 workers
-...
-32 passed (9.4s)
-```
+Key issues found during manual testing:
+1. Checkout is reachable with an empty cart (violates Business Rule 3).
+2. No format/length validation on checkout information fields (partial gap vs AC5).
 
-| Suite | File count | Tests | Pass | Fail |
-|---|---:|---:|---:|---:|
-| AC1 — Cart Review | 5 | 5 | 5 | 0 |
-| AC2 — Checkout Information Entry | 7 | 7 | 7 | 0 |
-| AC3 — Order Overview | 5 | 5 | 5 | 0 |
-| AC4 — Order Completion | 4 | 4 | 4 | 0 |
-| AC5 — Error Handling | 4 | 4 | 4 | 0 |
-| Happy Path E2E | 2 | 2 | 2 | 0 |
-| Navigation & Edge Cases | 5 | 5 | 5 | 0 |
-| **TOTAL** | **32** | **32** | **32** | **0** |
+---
 
-All test files live under [tests/](../tests/) organized by suite. Shared login/cart/checkout helpers are in [tests/_helpers/saucedemo.ts](../tests/_helpers/saucedemo.ts).
+## 3. Automated Test Results
+
+### 3.1 Test Suite Structure
+
+Automated Playwright TypeScript tests were generated in `tests/saucedemo-checkout/`, based on the test plan and using the exact selectors (`data-test` attributes) and application behaviors validated during manual exploratory testing:
+
+| File | Suite | Test Count |
+|---|---|---|
+| [cart-review.spec.ts](../tests/saucedemo-checkout/cart-review.spec.ts) | Cart Review | 3 |
+| [checkout-information.spec.ts](../tests/saucedemo-checkout/checkout-information.spec.ts) | Checkout Information Entry | 6 |
+| [order-overview.spec.ts](../tests/saucedemo-checkout/order-overview.spec.ts) | Order Overview | 3 |
+| [order-completion.spec.ts](../tests/saucedemo-checkout/order-completion.spec.ts) | Order Completion | 3 |
+| [navigation-edge-cases.spec.ts](../tests/saucedemo-checkout/navigation-edge-cases.spec.ts) | Navigation and Edge Cases | 3 |
+
+Tests are configured to run against Chromium, Firefox, and WebKit via [playwright.config.ts](../playwright.config.ts).
+
+### 3.2 Initial Execution Results
+
+The first execution run (Chromium only, 18 tests) produced **18/18 passed**, with no selector, timing, or assertion failures.
+
+### 3.3 Cross-Browser Execution Results
+
+A full cross-browser run (Chromium, Firefox, WebKit — 54 test executions) was performed next:
+
+| Browser | Tests Run | Passed | Failed |
+|---|---|---|---|
+| Chromium | 18 | 18 | 0 |
+| Firefox | 18 | 18 | 0 |
+| WebKit | 18 | 18 | 0 |
+| **Total** | **54** | **54** | **0** |
+
+### 3.4 Healing Activities
+
+**No healing was required.** Because the automation scripts were authored directly from the selectors and navigation behaviors validated in manual exploratory testing (Section 2), all 54 test executions passed on the first attempt across all three browsers. No selector adjustments, wait-strategy changes, or assertion corrections were necessary.
+
+### 3.5 Final Test Execution Summary
+
+| Metric | Result |
+|---|---|
+| Total automated executions | 54 |
+| Passed | 54 |
+| Failed | 0 |
+| Flaky / healed | 0 |
+| Pass rate | 100% |
 
 ---
 
 ## 4. Defects Log
 
-### DEF-001 (Test code, fixed)
+### DEFECT-001: Checkout is reachable with an empty cart
 
-| Field | Value |
-|---|---|
-| ID | DEF-001 |
-| Severity | Low (test-code defect, not application defect) |
-| Title | TC-24 used wrong selector (`img` tag) for the per-field error indicator |
-| Description | The initial test asserted that an `<img>` element was visible inside each `.form_group` after validation failure. The actual DOM uses `<svg class="error_icon" role="img">`. |
-| Steps to Reproduce | Run `tc-24-error-field-styling.spec.ts` against initial generator output. |
-| Expected | Test passes — error icon is visible on each required field. |
-| Actual | `expect(locator).toBeVisible()` timed out after 5s on the `img` locator. |
-| Evidence | Initial run log; healer report. |
-| Environment | Chromium / Playwright 1.x / Windows |
-| Status | **Resolved** — selector changed to `.error_icon`; test passes. |
+- **Severity:** Medium
+- **Title:** Application allows navigating to and through checkout with an empty cart
+- **Description:** Business Rule 3 states "Cart cannot be empty when proceeding to checkout." However, the Checkout button on the cart page remains enabled and functional even when the cart contains zero items, allowing the user to reach the checkout information page and beyond.
+- **Steps to Reproduce:**
+  1. Log in as `standard_user`.
+  2. Navigate to the cart page with no items added (or remove all items).
+  3. Click "Checkout".
+- **Expected Behavior:** The user should be blocked from proceeding to checkout, or shown a message indicating the cart must contain at least one item.
+- **Actual Behavior:** The user is navigated to `/checkout-step-one.html` without any warning or restriction.
+- **Evidence:** Documented in automated regression test `navigation-edge-cases.spec.ts` › "should currently allow proceeding to checkout even when cart is empty (known defect)" and in [exploratory-testing-results.md](exploratory-testing-results.md) (Suite 5, scenario 5.2).
+- **Environment:** https://www.saucedemo.com, Chromium/Firefox/WebKit (latest), standard_user account.
 
-**No application defects were discovered.** The SauceDemo checkout flow behaves exactly as specified by SCRUM-101 across all 32 scenarios.
+### DEFECT-002: No format or length validation on checkout information fields
+
+- **Severity:** Low
+- **Title:** Checkout information form only validates presence, not format, of input
+- **Description:** AC5 ("Error Handling") expects appropriate validation error messages when invalid data (special characters, incomplete/malformed information) is entered. The application only checks that First Name, Last Name, and Zip/Postal Code are non-empty; it accepts special characters and arbitrarily long strings without any error.
+- **Steps to Reproduce:**
+  1. Log in, add an item to cart, and navigate to the checkout information page.
+  2. Enter `@#$%^&*()_+{}|:<>?` in First Name, a 100+ character string in Last Name, and `!!!###` in Zip/Postal Code.
+  3. Click "Continue".
+- **Expected Behavior:** A validation error should be shown indicating the data is invalid, per AC5.
+- **Actual Behavior:** The application proceeds directly to the Order Overview page with the invalid data accepted as-is.
+- **Evidence:** Documented in automated regression test `navigation-edge-cases.spec.ts` › "should currently accept special characters and boundary-length values without validation (known defect)" and in [exploratory-testing-results.md](exploratory-testing-results.md) (Suite 5, scenario 5.3).
+- **Environment:** https://www.saucedemo.com, Chromium/Firefox/WebKit (latest), standard_user account.
+
+> **Note:** No Critical or High severity defects (broken happy-path flows, data loss, security bypass) were found. Both logged defects are gaps against the acceptance criteria's validation expectations, not functional breakages, and the corresponding automated tests currently assert the *actual* observed behavior so they can serve as regression guards; they should be updated to assert the *corrected* behavior once these defects are fixed.
 
 ---
 
 ## 5. Test Coverage Analysis
 
-| Acceptance Criterion | Manual | Automated | # Auto cases | Coverage |
-|---|:---:|:---:|---:|---|
-| AC1 — Cart Review | ✅ | ✅ | 5 | Item details, badge, Continue Shopping, Remove, Checkout button |
-| AC2 — Checkout Information Entry | ✅ | ✅ | 7 | Field visibility, per-field validation, all-empty, cancel, valid submit |
-| AC3 — Order Overview | ✅ | ✅ | 5 | Item summary, payment, shipping, totals math, cancel, action buttons |
-| AC4 — Order Completion | ✅ | ✅ | 4 | Finish navigation, success message, Back Home, cart cleared |
-| AC5 — Error Handling | ✅ | ✅ | 4 | Dismiss error, sequential validation, field styling, cannot proceed |
+| Acceptance Criteria | Covered By | Manual | Automated |
+|---|---|---|---|
+| AC1: Cart Review | Suite 1 (3 scenarios) | ✅ | ✅ |
+| AC2: Checkout Information Entry | Suite 2 (6 scenarios) | ✅ | ✅ |
+| AC3: Order Overview | Suite 3 (3 scenarios) | ✅ | ✅ |
+| AC4: Order Completion | Suite 4 (3 scenarios) | ✅ | ✅ |
+| AC5: Error Handling | Suite 2 (required-field errors) + Suite 5 (format validation gap) | ✅ (partial) | ✅ (partial — documents the gap) |
 
-**Gaps / future work:**
-- Mobile viewport coverage (Mobile Chrome / Mobile Safari projects are commented out in [playwright.config.ts](../playwright.config.ts:51-58)).
-- Cross-browser parity validation — Firefox & WebKit projects exist but were not exercised for this report. Recommend a full multi-project run before release.
-- Negative auth scenarios (locked_out_user, problem_user) are out of scope for SCRUM-101 but worth a follow-up story.
+**Business Rules Coverage:**
+- ✅ All checkout fields are mandatory — covered (Suite 2).
+- ✅ Users must be logged in to access checkout — covered (Suite 5.1).
+- 🐞 Cart cannot be empty when proceeding to checkout — **not enforced by the app** (DEFECT-001).
+- ✅ Order confirmation clears the cart — covered (Suite 4.2).
+- ✅ Users can cancel checkout at any step and return — covered (Suite 2.5, Suite 3.3), with the observation that "Cancel" on the overview page returns to Products rather than Cart.
+
+**Gaps / Recommendations for Additional Testing:**
+- Add coverage for other user types (`locked_out_user`, `problem_user`, `performance_glitch_user`, `error_user`, `visual_user`) to validate error handling and visual regressions across account states.
+- Add mobile-viewport / responsive checkout tests, since the user story calls out mobile responsiveness as a technical requirement and this was not exercised in this pass.
+- Add tests for multi-quantity or larger cart sizes (currently limited to 1–2 items).
+- Consider adding explicit format/length validation to the checkout information form to close DEFECT-002, and cart-empty guard logic to close DEFECT-001.
 
 ---
 
 ## 6. Summary and Recommendations
 
-- The checkout flow on SauceDemo satisfies all five SCRUM-101 acceptance criteria.
-- Test suite is stable (one self-healing cycle, then green) and uses only stable `[data-test="..."]` selectors plus a shared helper module — maintenance cost is low.
-- **Risk areas:** sequential single-error validation gives users a poor experience (one error at a time); not a defect, but worth raising with product.
-- **Next steps:**
-  1. Enable and run Firefox + WebKit projects in CI for cross-browser confidence.
-  2. Add mobile viewport projects.
-  3. Wire up the existing [.github/prompts/e2eTestWorkflow.prompt.md](../.github/prompts/e2eTestWorkflow.prompt.md) into PR-validation workflow so each story gets the same agentic treatment.
+**Overall Quality Assessment:** The core checkout journey (cart → information → overview → confirmation) is functionally solid and consistent across Chromium, Firefox, and WebKit, with accurate pricing calculations, clear required-field validation messaging, and correct session/auth guarding of checkout routes.
 
-**Overall verdict:** ✅ Ready to mark SCRUM-101 as Done.
+**Risk Areas:**
+- The empty-cart checkout gap (DEFECT-001) is a business-rule compliance risk rather than a breakage risk, since the app doesn't crash but silently ignores the rule.
+- The lack of input format validation (DEFECT-002) is a low-risk data-quality concern (e.g., garbage shipping data could be submitted) but is not a security issue in this demo application.
+
+**Next Steps:**
+1. Share DEFECT-001 and DEFECT-002 with the development team for triage and prioritization.
+2. Once fixed, update `navigation-edge-cases.spec.ts` to assert the corrected (blocking/validating) behavior instead of the current documented workaround behavior.
+3. Expand automated coverage to the additional user types and responsive/mobile scenarios noted above.
+4. Continue running the automated suite (`tests/saucedemo-checkout/`) across all three browsers on every change to guard against regressions.
